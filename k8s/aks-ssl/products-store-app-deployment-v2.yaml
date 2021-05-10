@@ -1,0 +1,40 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  namespace: products-store-ns
+  name: products-store-deployment
+spec:
+  selector:
+    matchLabels:
+      app: products-store-app
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: products-store-app
+    spec:
+      containers:
+      - name: products-store-app
+        image: dloperab/products-store-mvc:v1.0
+        ports:
+        - containerPort: 80
+        env:
+        - name: ConnectionStrings__MvcAppContext
+          valueFrom:
+            secretKeyRef:
+              name: products-store-mssql-secret
+              key: db-connection-string-secret
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: products-store-ns
+  name: products-store-service
+spec:
+  selector:
+    app: products-store-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
